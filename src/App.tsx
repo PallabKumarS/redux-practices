@@ -2,7 +2,6 @@ import React from "react";
 import {
   decrement,
   increment,
-  incrementBy5,
 } from "./redux/features/counter/counterSlice";
 import { useAppDispatch, useAppSelector } from "./redux/hook";
 
