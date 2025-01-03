@@ -1,9 +1,6 @@
-import React from "react";
-import {
-  decrement,
-  increment,
-} from "./redux/features/counter/counterSlice";
+import { decrement, increment } from "./redux/features/counter/counterSlice";
 import { useAppDispatch, useAppSelector } from "./redux/hook";
+import { Button } from "./components/ui/button";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -18,13 +15,21 @@ function App() {
   };
 
   return (
-    <div className="">
+    <div className="mt-5 text-center">
       <h1 className="">Counter With Redux</h1>
-      <button onClick={() => handleIncrement(1)}>Increment +</button>
-      <button onClick={() => handleIncrement(5)}>Increment by 5</button>
+      <Button className="mx-4" onClick={() => handleIncrement(1)}>
+        Increment +
+      </Button>
+      <Button className="mx-4" onClick={() => handleIncrement(5)}>
+        Increment by 5
+      </Button>
       <div>{count}</div>
-      <button onClick={() => handleDecrement(1)}>Decrement -</button>
-      <button onClick={() => handleDecrement(5)}>Decrement by 5</button>
+      <Button className="mx-4" onClick={() => handleDecrement(1)}>
+        Decrement -
+      </Button>
+      <Button className="mx-4" onClick={() => handleDecrement(5)}>
+        Decrement by 5
+      </Button>
     </div>
   );
 }

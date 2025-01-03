@@ -7,8 +7,6 @@ const logger = (state) => (next) => (action) => {
   console.info("Next State", state.getState());
   console.groupEnd();
   return result;
-
-  return next(action);
 };
 
 export default logger;
