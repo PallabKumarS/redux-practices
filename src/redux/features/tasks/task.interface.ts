@@ -1,24 +1,18 @@
-type TTaskStatus = "Todo" | "In Progress" | "Completed";
-
-type TTaskPriority = "Low" | "Medium" | "High";
-
 export interface ITask {
-  id: string;
+  id?: string;
   title: string;
   description: string;
-  status: TTaskStatus;
-  priority: TTaskPriority;
+  status: "ongoing" | "completed";
+  priority: "low" | "medium" | "high";
   dueDate: string;
 }
 
 export interface ITaskState {
   tasks: ITask[];
-  filter:
-    | "All"
-    | "Completed"
-    | "In Progress"
-    | "Todo"
-    | "High"
-    | "Medium"
-    | "Low";
+  filter: "all" | "completed" | "high" | "medium" | "low" | "ongoing";
 }
+
+export type DraftTask = Pick<
+  ITask,
+  "title" | "description" | "dueDate" | "priority"
+>;

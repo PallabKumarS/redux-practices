@@ -1,43 +1,38 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { ITaskState } from "./task.interface";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { DraftTask, ITask, ITaskState } from "./task.interface";
 import { RootState } from "@/redux/store";
+import { v4 as uuidv4 } from "uuid";
 
 const initialState: ITaskState = {
-  tasks: [
-    {
-      id: "1",
-      title: "Task 1",
-      description: "Task 1 description",
-      dueDate: "2021-10-10",
-      priority: "High",
-      status: "In Progress",
-    },
-    {
-      id: "2",
-      title: "Task 2",
-      description: "Task 2 description",
-      dueDate: "2021-10-10",
-      priority: "Medium",
-      status: "In Progress",
-    },
-    {
-      id: "3",
-      title: "Task 3",
-      description: "Task 3 description",
-      dueDate: "2021-10-10",
-      priority: "Low",
-      status: "In Progress",
-    },
-  ],
-  filter: "All",
+  tasks: [],
+  filter: "all",
+};
+
+const createNewTask = (task: DraftTask): ITask => {
+  return {
+    id: uuidv4(),
+    ...task,
+    status: "ongoing",
+  };
 };
 
 const taskSlice = createSlice({
   name: "tasks",
   initialState,
   reducers: {
-    addTask: (state, action) => {
-      state.tasks.push(action.payload);
+    addTask: (state, action: PayloadAction<DraftTask>) => {
+      const newTask = createNewTask(action.payload);
+
+      state.tasks.push(newTask);
+    },
+    toggleStatus: (state, action: PayloadAction<string>) => {
+      const task = state.tasks.find((task) => task.id === action.payload);
+      if (task) {
+        task.status = task.status === "ongoing" ? "completed" : "ongoing";
+      }
+    },
+    deleteTask: (state, action: PayloadAction<string>) => {
+      state.tasks = state.tasks.filter((task) => task.id !== action.payload);
     },
   },
 });
@@ -46,6 +41,6 @@ export const selectTasks = (state: RootState) => state.todo.tasks;
 
 export const selectFilter = (state: RootState) => state.todo.filter;
 
-export const { addTask } = taskSlice.actions;
+export const { addTask, toggleStatus } = taskSlice.actions;
 
 export default taskSlice;
