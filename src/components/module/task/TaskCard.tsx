@@ -1,15 +1,13 @@
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { ITask } from "@/redux/features/tasks/task.interface";
-import { toggleStatus } from "@/redux/features/tasks/taskSlice";
+import { deleteTask, toggleStatus } from "@/redux/features/tasks/taskSlice";
 import { useAppDispatch } from "@/redux/hook";
 
-import { Trash2 } from "lucide-react";
-
-interface IPropTask {
-  task: ITask;
-}
+import { MdDeleteForever } from "react-icons/md";
+import { TiEdit } from "react-icons/ti";
+import ConfirmationBox from "../shared/ConfirmationBox";
+import { IPropTask } from "./task.interface";
+import { AddTaskModal } from "./AddTaskModal";
 
 export default function TaskCard({ task }: IPropTask) {
   const dispatch = useAppDispatch();
@@ -27,17 +25,26 @@ export default function TaskCard({ task }: IPropTask) {
           ></div>
           <h1
             className={cn({
-              strikethrough: task.status === "completed",
+              "line-through": task.status === "completed",
             })}
           >
             {task.title}
           </h1>
         </div>
         <div className="flex gap-3 items-center">
-          <Button variant="link" className="p-0 text-red-500">
-            <Trash2 />
-          </Button>
+          {/* delete button here with alert dialog */}
+          <ConfirmationBox
+            trigger={<MdDeleteForever className="text-2xl text-red-500" />}
+            onConfirm={() => dispatch(deleteTask(task?.id as string))}
+          ></ConfirmationBox>
+
+          {/* edit button here */}
+          <AddTaskModal task={task} trigger={<TiEdit className="text-2xl" />} />
+
+          {/* checkbox here */}
           <Checkbox
+            className="text-2xl"
+            checked={task.status === "completed"}
             onClick={() => dispatch(toggleStatus(task?.id as string))}
           />
         </div>

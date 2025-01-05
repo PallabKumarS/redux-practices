@@ -16,3 +16,7 @@ export type DraftTask = Pick<
   ITask,
   "title" | "description" | "dueDate" | "priority"
 >;
+
+export interface IPropTask {
+  task: ITask;
+}

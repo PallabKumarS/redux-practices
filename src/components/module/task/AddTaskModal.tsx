@@ -31,28 +31,54 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { DraftTask } from "@/redux/features/tasks/task.interface";
-import { addTask } from "@/redux/features/tasks/taskSlice";
+import { DraftTask, ITask } from "@/components/module/task/task.interface";
+import { addTask, editTask } from "@/redux/features/tasks/taskSlice";
 import { useAppDispatch } from "@/redux/hook";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 
-export function AddTaskModal() {
+export function AddTaskModal({
+  task,
+  trigger,
+}: { task?: ITask } & { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const dispatch = useAppDispatch();
 
-  const form = useForm();
+  const form = useForm({
+    defaultValues: {
+      title: task?.title || "",
+      description: task?.description || "",
+      dueDate: task?.dueDate ? new Date(task?.dueDate) : new Date(),
+      priority: task?.priority || "medium",
+    },
+  });
 
   const handleSubmit: SubmitHandler<FieldValues> = (data) => {
-    dispatch(addTask(data as DraftTask));
+    // create operation
+    if (!task) {
+      if (typeof data.dueDate !== "string") {
+        data.dueDate = data.dueDate.toString();
+      }
+
+      dispatch(addTask(data as DraftTask));
+    }
+
+    // update operation
+    if (task) {
+      if (typeof data.dueDate !== "string") {
+        data.dueDate = data.dueDate.toString();
+      }
+
+      dispatch(editTask({ ...data, id: task.id } as ITask));
+    }
   };
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button>Add Task</Button>
+      <DialogTrigger asChild={!trigger ? true : false}>
+        {trigger || <Button>Add Task</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -82,7 +108,7 @@ export function AddTaskModal() {
                       aria-required
                       placeholder="Enter task title"
                       {...field}
-                      value={field.value || ""}
+                      defaultValue={field.value}
                     />
                   </FormControl>
                 </FormItem>
@@ -104,7 +130,7 @@ export function AddTaskModal() {
                       aria-required
                       placeholder="Enter task description"
                       {...field}
-                      value={field.value || ""}
+                      value={field.value}
                     />
                   </FormControl>
                 </FormItem>
@@ -130,12 +156,13 @@ export function AddTaskModal() {
                           variant={"outline"}
                           className={cn(
                             "w-full pl-3 text-left font-normal",
-                            !field.value && "text-muted-foreground"
+                            !(task?.dueDate || field.value) &&
+                              "text-muted-foreground"
                           )}
                           onClick={() => setOpen(true)}
                         >
-                          {field.value ? (
-                            format(field.value, "PPP")
+                          {task?.dueDate || field.value ? (
+                            format(field.value.toDateString(), "PPP")
                           ) : (
                             <span>Pick a date</span>
                           )}
@@ -147,7 +174,13 @@ export function AddTaskModal() {
                       <Calendar
                         required
                         mode="single"
-                        selected={field.value}
+                        selected={
+                          task?.dueDate
+                            ? new Date(task?.dueDate as string)
+                            : field.value
+                            ? new Date(field.value)
+                            : undefined
+                        }
                         onSelect={(date) => {
                           field.onChange(date?.toDateString());
                           setOpen(false);
