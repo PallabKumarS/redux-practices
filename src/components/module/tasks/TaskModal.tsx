@@ -31,19 +31,22 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { DraftTask, ITask } from "@/components/module/task/task.interface";
+import { DraftTask, ITask } from "@/components/module/tasks/task.interface";
 import { addTask, editTask } from "@/redux/features/tasks/taskSlice";
-import { useAppDispatch } from "@/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import React, { useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
+import { selectUsers } from "@/redux/features/users/userSlice";
 
-export function AddTaskModal({
+export function TaskModal({
   task,
   trigger,
 }: { task?: ITask } & { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const users = useAppSelector(selectUsers);
   const dispatch = useAppDispatch();
 
   const form = useForm({
@@ -51,7 +54,8 @@ export function AddTaskModal({
       title: task?.title || "",
       description: task?.description || "",
       dueDate: task?.dueDate ? new Date(task?.dueDate) : new Date(),
-      priority: task?.priority || "medium",
+      priority: task?.priority || "",
+      assignee: task?.assignee || "",
     },
   });
 
@@ -63,6 +67,7 @@ export function AddTaskModal({
       }
 
       dispatch(addTask(data as DraftTask));
+      setOpen(false);
     }
 
     // update operation
@@ -72,19 +77,20 @@ export function AddTaskModal({
       }
 
       dispatch(editTask({ ...data, id: task.id } as ITask));
+      setOpen(false);
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild={!trigger ? true : false}>
         {trigger || <Button>Add Task</Button>}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Task</DialogTitle>
+          <DialogTitle>{task ? "Edit Task" : "Add Task"}</DialogTitle>
           <DialogDescription>
-            Fill up this form to add a new task.{" "}
+            Fill up this form to {task ? "edit the" : "add a"} task.{" "}
             <span className="text-red-500">*</span> means required.
           </DialogDescription>
         </DialogHeader>
@@ -108,7 +114,7 @@ export function AddTaskModal({
                       aria-required
                       placeholder="Enter task title"
                       {...field}
-                      defaultValue={field.value}
+                      value={field.value}
                     />
                   </FormControl>
                 </FormItem>
@@ -149,7 +155,7 @@ export function AddTaskModal({
                   <FormLabel>
                     Due Date <span className="text-red-500">*</span>
                   </FormLabel>
-                  <Popover open={open} onOpenChange={setOpen}>
+                  <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
@@ -159,7 +165,7 @@ export function AddTaskModal({
                             !(task?.dueDate || field.value) &&
                               "text-muted-foreground"
                           )}
-                          onClick={() => setOpen(true)}
+                          onClick={() => setCalendarOpen(true)}
                         >
                           {task?.dueDate || field.value ? (
                             format(field.value.toDateString(), "PPP")
@@ -183,7 +189,7 @@ export function AddTaskModal({
                         }
                         onSelect={(date) => {
                           field.onChange(date?.toDateString());
-                          setOpen(false);
+                          setCalendarOpen(false);
                         }}
                         disabled={(date) => date < new Date("2000-01-01")}
                         initialFocus
@@ -224,9 +230,44 @@ export function AddTaskModal({
               )}
             />
 
+            {/* users input here  */}
+            <FormField
+              control={form.control}
+              name="assignee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Assignees <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a assignee" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {users.map((user) => {
+                        return (
+                          <SelectItem key={user?.id} value={user?.id}>
+                            {" "}
+                            {user?.name}{" "}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
             {/* submit here  */}
             <DialogFooter>
-              <Button type="submit">Save changes</Button>
+              <Button type="submit">
+                {task ? "Save Changes" : "Add Task"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

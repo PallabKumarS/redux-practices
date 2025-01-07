@@ -5,11 +5,12 @@ export interface ITask {
   status: "ongoing" | "completed";
   priority: "low" | "medium" | "high";
   dueDate: string;
+  assignee?: string | null;
 }
 
 export interface ITaskState {
   tasks: ITask[];
-  filter: "all" | "completed" | "high" | "medium" | "low" | "ongoing";
+  filter: "all" | "high" | "medium" | "low";
 }
 
 export type DraftTask = Pick<
