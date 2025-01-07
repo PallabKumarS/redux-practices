@@ -31,14 +31,13 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { DraftTask, ITask } from "@/components/module/tasks/task.interface";
-import { addTask, editTask } from "@/redux/features/tasks/taskSlice";
-import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { ITask } from "@/components/module/tasks/task.interface";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import React, { useState } from "react";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { selectUsers } from "@/redux/features/users/userSlice";
+import { useCreateTaskMutation, useGetUsersQuery } from "@/redux/api/baseApi";
+import { IUser } from "../users/user.interface";
 
 export function TaskModal({
   task,
@@ -46,8 +45,14 @@ export function TaskModal({
 }: { task?: ITask } & { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const users = useAppSelector(selectUsers);
-  const dispatch = useAppDispatch();
+
+  const { data: userData, isLoading } = useGetUsersQuery(undefined, {
+    pollingInterval: 30000,
+    refetchOnMountOrArgChange: true,
+    refetchOnReconnect: true,
+  });
+
+  const [createTask] = useCreateTaskMutation();
 
   const form = useForm({
     defaultValues: {
@@ -55,18 +60,24 @@ export function TaskModal({
       description: task?.description || "",
       dueDate: task?.dueDate ? new Date(task?.dueDate) : new Date(),
       priority: task?.priority || "",
-      assignee: task?.assignee || "",
+      assignedTo: task?.assignedTo || "",
     },
   });
 
   const handleSubmit: SubmitHandler<FieldValues> = (data) => {
+    const taskData = {
+      ...data,
+      isCompleted: false,
+    };
+
     // create operation
     if (!task) {
       if (typeof data.dueDate !== "string") {
         data.dueDate = data.dueDate.toString();
       }
 
-      dispatch(addTask(data as DraftTask));
+      // create user
+      createTask(taskData);
       setOpen(false);
     }
 
@@ -76,7 +87,7 @@ export function TaskModal({
         data.dueDate = data.dueDate.toString();
       }
 
-      dispatch(editTask({ ...data, id: task.id } as ITask));
+      // update user
       setOpen(false);
     }
   };
@@ -233,11 +244,11 @@ export function TaskModal({
             {/* users input here  */}
             <FormField
               control={form.control}
-              name="assignee"
+              name="assignedTo"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Assignees <span className="text-red-500">*</span>
+                    assignedTos <span className="text-red-500">*</span>
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -249,14 +260,18 @@ export function TaskModal({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {users.map((user) => {
-                        return (
-                          <SelectItem key={user?.id} value={user?.id}>
-                            {" "}
-                            {user?.name}{" "}
-                          </SelectItem>
-                        );
-                      })}
+                      {!isLoading &&
+                        userData?.users.map((user: IUser) => {
+                          return (
+                            <SelectItem
+                              key={user?._id}
+                              value={user?._id as string}
+                            >
+                              {" "}
+                              {user?.name}{" "}
+                            </SelectItem>
+                          );
+                        })}
                     </SelectContent>
                   </Select>
                 </FormItem>

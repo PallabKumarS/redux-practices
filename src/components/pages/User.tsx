@@ -1,10 +1,18 @@
-import { useAppSelector } from "@/redux/hook";
 import { UserModal } from "../module/users/UserModal";
 import UserCard from "../module/users/UserCard";
-import { selectUsers } from "@/redux/features/users/userSlice";
+import { useGetUsersQuery } from "@/redux/api/baseApi";
+import { IUser } from "../module/users/user.interface";
 
 export default function User() {
-  const users = useAppSelector(selectUsers);
+  const { data, isLoading } = useGetUsersQuery(undefined, {
+    pollingInterval: 60000,
+    refetchOnMountOrArgChange: true,
+    refetchOnReconnect: true,
+  });
+
+  if (isLoading) {
+    return <h1 className="text-center mx-auto">Loading...</h1>;
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 mt-20">
@@ -14,9 +22,10 @@ export default function User() {
         <UserModal />
       </div>
       <div className="mt-10 justify-between grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 items-center gap-4">
-        {users?.map((user) => (
-          <UserCard key={user.id} user={user} />
-        ))}
+        {!isLoading &&
+          data?.users?.map((user: IUser) => (
+            <UserCard key={user._id} user={user} />
+          ))}
       </div>
     </div>
   );

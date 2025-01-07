@@ -1,11 +1,11 @@
 export interface ITask {
-  id?: string;
+  _id?: string;
   title: string;
   description: string;
-  status: "ongoing" | "completed";
+  isCompleted: boolean;
   priority: "low" | "medium" | "high";
   dueDate: string;
-  assignee?: string | null;
+  assignedTo?: string | null;
 }
 
 export interface ITaskState {
@@ -15,7 +15,12 @@ export interface ITaskState {
 
 export type DraftTask = Pick<
   ITask,
-  "title" | "description" | "dueDate" | "priority"
+  | "title"
+  | "description"
+  | "dueDate"
+  | "priority"
+  | "isCompleted"
+  | "assignedTo"
 >;
 
 export interface IPropTask {

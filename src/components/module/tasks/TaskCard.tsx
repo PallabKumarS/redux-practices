@@ -1,19 +1,35 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-import { deleteTask, toggleStatus } from "@/redux/features/tasks/taskSlice";
-import { useAppDispatch, useAppSelector } from "@/redux/hook";
 
 import { MdDeleteForever } from "react-icons/md";
 import { TiEdit } from "react-icons/ti";
 import ConfirmationBox from "../shared/ConfirmationBox";
 import { IPropTask } from "./task.interface";
 import { TaskModal } from "./TaskModal";
-import { selectUsers } from "@/redux/features/users/userSlice";
+import {
+  useDeleteTaskMutation,
+  useGetUsersQuery,
+  useUpdateTaskMutation,
+} from "@/redux/api/baseApi";
+import { IUser } from "../users/user.interface";
 
 export default function TaskCard({ task }: IPropTask) {
-  const dispatch = useAppDispatch();
-  const users = useAppSelector(selectUsers);
-  const user = users.find((user) => user.id === task.assignee);
+  const { data: userData, isLoading } = useGetUsersQuery(undefined, {
+    pollingInterval: 30000,
+    refetchOnMountOrArgChange: true,
+    refetchOnReconnect: true,
+  });
+
+  const [deleteTask] = useDeleteTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
+
+  if (isLoading) {
+    return <h1 className="text-center mx-auto">Loading...</h1>;
+  }
+
+  const user = userData?.users?.find(
+    (user: IUser) => user._id === task.assignedTo
+  );
 
   return (
     <div className="border px-5 py-3 rounded-md">
@@ -28,7 +44,7 @@ export default function TaskCard({ task }: IPropTask) {
           ></div>
           <h1
             className={cn({
-              "line-through": task.status === "completed",
+              "line-through": task.isCompleted,
             })}
           >
             {task.title}
@@ -40,7 +56,7 @@ export default function TaskCard({ task }: IPropTask) {
           {/* delete button here with alert dialog */}
           <ConfirmationBox
             trigger={<MdDeleteForever className="text-2xl text-red-500" />}
-            onConfirm={() => dispatch(deleteTask(task?.id))}
+            onConfirm={() => deleteTask(task?._id)}
           ></ConfirmationBox>
 
           {/* edit button here */}
@@ -52,8 +68,13 @@ export default function TaskCard({ task }: IPropTask) {
           {/* checkbox here */}
           <Checkbox
             className="text-2xl"
-            checked={task.status === "completed"}
-            onClick={() => dispatch(toggleStatus(task?.id))}
+            checked={task.isCompleted}
+            onClick={() =>
+              updateTask({
+                id: task?._id,
+                body: { isCompleted: !task.isCompleted },
+              })
+            }
           />
         </div>
       </div>

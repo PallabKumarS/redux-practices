@@ -1,13 +1,12 @@
 import { MdDeleteForever } from "react-icons/md";
 import { IUser } from "./user.interface";
 import { TiEdit } from "react-icons/ti";
-import { useAppDispatch } from "@/redux/hook";
 import ConfirmationBox from "../shared/ConfirmationBox";
-import { deleteUser } from "@/redux/features/users/userSlice";
 import { UserModal } from "./UserModal";
+import { useDeleteUserMutation } from "@/redux/api/baseApi";
 
 export default function UserCard({ user }: { user: IUser }) {
-  const dispatch = useAppDispatch();
+  const [deleteUser] = useDeleteUserMutation();
 
   return (
     <div className="border px-5 py-3 rounded-md">
@@ -17,7 +16,7 @@ export default function UserCard({ user }: { user: IUser }) {
           {/* delete button here with alert dialog */}
           <ConfirmationBox
             trigger={<MdDeleteForever className="text-2xl text-red-500" />}
-            onConfirm={() => dispatch(deleteUser(user.id))}
+            onConfirm={() => deleteUser(user._id)}
           />
 
           {/* edit button here */}

@@ -16,18 +16,18 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useAppDispatch } from "@/redux/hook";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
-import { DraftUser, IUser } from "@/components/module/users/user.interface";
-import { addUser, editUser } from "@/redux/features/users/userSlice";
+import { IUser } from "@/components/module/users/user.interface";
 import { ReactNode, useState } from "react";
+import { useCreateUserMutation } from "@/redux/api/baseApi";
 
 export function UserModal({
   user,
   trigger,
 }: { user?: IUser } & { trigger?: ReactNode }) {
   const [open, setOpen] = useState(false);
-  const dispatch = useAppDispatch();
+
+  const [createUser] = useCreateUserMutation();
 
   const form = useForm({
     defaultValues: {
@@ -36,17 +36,24 @@ export function UserModal({
     },
   });
 
-  const handleSubmit: SubmitHandler<FieldValues> = (data) => {
+  const handleSubmit: SubmitHandler<FieldValues> = async (data) => {
     // create operation
     if (!user) {
-      dispatch(addUser(data as DraftUser));
       setOpen(false);
+      form.reset();
+
+      // create user
+      createUser(data);
     }
+
+    console.log(data);
 
     // update operation
     if (user) {
-      dispatch(editUser({ ...data, id: user.id } as IUser));
       setOpen(false);
+      form.reset();
+
+      // update user
     }
   };
 
